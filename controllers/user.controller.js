@@ -1,22 +1,27 @@
 const userModel = require('../models/userModel');
-const db = require('../db')
+const bcrypt = require('bcrypt');
+const db = require('../db');
+
+const saltRounds = 10;
 
 class UserController {
   async createUser(req, res) {
-    const { name, surname } = req.body;
-
-    console.log(req.body)
-    userModel
-      .create({
-        name,
-        surname,
-      })
-      .then((_res) => {
-        res.json(_res);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    const { name, surname, password, username } = req.body;
+    const hash = await bcrypt.hash(password, saltRounds).then((val) => {
+      userModel
+        .create({
+          name,
+          surname,
+          password: hash,
+          username,
+        })
+        .then((_res) => {
+          res.json(_res);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    });
   }
 }
 
