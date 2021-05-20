@@ -4,20 +4,19 @@ const db = require('../db')
 class UserController {
   async createUser(req, res) {
     const { name, surname } = req.body;
+
+    console.log(req.body)
     userModel
       .create({
         name,
         surname,
       })
-      .then((res) => {
-        console.log(res);
+      .then((_res) => {
+        res.json(_res);
       })
       .catch((err) => {
         console.log(err);
       });
-    // console.log(name, surname);
-
-    res.json('ok');
   }
 }
 
