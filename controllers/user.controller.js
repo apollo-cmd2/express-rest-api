@@ -7,7 +7,7 @@ const saltRounds = 10;
 class UserController {
   async createUser(req, res) {
     const { name, surname, password, username } = req.body;
-    if (surname && password) {
+    if (surname && password && role) {
       await bcrypt.hash(password, saltRounds).then((val) => {
         userModel
           .create({
@@ -24,7 +24,11 @@ class UserController {
           });
       });
     } else {
-      res.status(400).send('Введите пароль и логин');
+      if (!role) {
+        res.status(400).send('Выберите роль.');
+      } else {
+        res.status(400).send('Введите пароль и логин.');
+      }
     }
   }
 
@@ -42,6 +46,8 @@ class UserController {
               name: user.name,
               surname: user.surname,
               orders: user.orders,
+              role: user.role,
+              _id: user._id,
             });
           } else {
             res.status(401).send('Неправильно введены данные');
