@@ -6,8 +6,9 @@ const saltRounds = 10;
 
 class UserController {
   async createUser(req, res) {
-    const { name, surname, password, username } = req.body;
-    if (surname && password && role) {
+    const { name, surname, password, username, role } = req.body;
+    const user = await db.model('user').findOne().where({ username });
+    if (surname && password && role && !user) {
       await bcrypt.hash(password, saltRounds).then((val) => {
         userModel
           .create({
@@ -26,8 +27,10 @@ class UserController {
     } else {
       if (!role) {
         res.status(400).send('Выберите роль.');
-      } else {
+      } else if (!surname || !password) {
         res.status(400).send('Введите пароль и логин.');
+      } else if (user) {
+        res.status(400).send('Пользователь с таким логином существует.');
       }
     }
   }
