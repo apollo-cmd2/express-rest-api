@@ -1,4 +1,5 @@
 const userModel = require('../models/userModel');
+const db = require('../db')
 
 class UserController {
   async createUser(req, res) {
