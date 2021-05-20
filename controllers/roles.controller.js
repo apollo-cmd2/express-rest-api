@@ -14,7 +14,7 @@ class RolesController {
       });
   }
 
-  async getRoles(req, res) {
+  async getRoles(__, res) {
     rolesModel.find({}, (_, values) => {
       res.json(values);
     });
