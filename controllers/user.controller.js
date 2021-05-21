@@ -16,6 +16,7 @@ class UserController {
             surname,
             password: val,
             username,
+            role
           })
           .then((_res) => {
             res.json(_res);
@@ -43,20 +44,40 @@ class UserController {
       .findOne()
       .where({ username })
       .then((user) => {
-        bcrypt.compare(password, user.password, function (err, result) {
-          if (result) {
-            res.status(200).send({
-              name: user.name,
-              surname: user.surname,
-              orders: user.orders,
-              role: user.role,
-              _id: user._id,
-            });
-          } else {
-            res.status(401).send('Неправильно введены данные');
-          }
-        });
+        console.log(user);
+        if (user) {
+          bcrypt.compare(password, user.password, function (err, result) {
+            if (result) {
+              res.status(200).send({
+                name: user.name,
+                surname: user.surname,
+                orders: user.orders,
+                role: user.role,
+                _id: user._id,
+              });
+            } else {
+              res.status(401).send('Неправильно введены данные');
+            }
+          });
+        } else {
+          res.status(401).send('Неправильно введены данные');
+        }
       });
+  }
+
+  async getUsers(__, res) {
+    const query = {};
+    const { role } = __.query;
+    if (role) {
+      query.role = role;
+    }
+    userModel.find(query, (err, users) => {
+      if (err) {
+        res.send('Что то пошло не так, повторите попытку.');
+      } else {
+        res.send(users);
+      }
+    });
   }
 }
 

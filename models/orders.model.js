@@ -12,7 +12,11 @@ const OrdersSchema = mongoose.Schema({
       name: String,
       _id: mongoose.SchemaTypes.ObjectId,
     } || null,
-  takenAt: Date || null,
+  takenAt: {
+    type: Date || null,
+    default: null,
+  },
+  status: String,
 });
 
 module.exports = mongoose.model('orders', OrdersSchema);
