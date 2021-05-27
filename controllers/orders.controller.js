@@ -100,7 +100,6 @@ class OrdersController {
       res.status(403).send('Что то пошло не так, попробуйте ещё раз.');
     }
   }
-
 }
 
 module.exports = new OrdersController();

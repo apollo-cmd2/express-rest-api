@@ -16,7 +16,7 @@ class UserController {
             surname,
             password: val,
             username,
-            role
+            role,
           })
           .then((_res) => {
             res.json(_res);
@@ -44,14 +44,17 @@ class UserController {
       .findOne()
       .where({ username })
       .then((user) => {
-        console.log(user);
         if (user) {
-          bcrypt.compare(password, user.password, function (err, result) {
-            if (result) {
+          bcrypt.compare(password, user.password, async function (err, result) {
+            const orders = await db.model('orders').find();
+            const filteredOrders = orders.filter((order) => {
+              return String(user._id) === String(order.orderedBy._id);
+            });
+            if (result && filteredOrders) {
               res.status(200).send({
                 name: user.name,
                 surname: user.surname,
-                orders: user.orders,
+                orders: filteredOrders,
                 role: user.role,
                 _id: user._id,
               });
