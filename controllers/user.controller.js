@@ -1,5 +1,8 @@
 const userModel = require('../models/userModel');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
+const { validateEmail } = require('../utils');
+const transporter = require('../mailer');
 const db = require('../db');
 
 const saltRounds = 10;
@@ -8,7 +11,7 @@ class UserController {
   async createUser(req, res) {
     const { name, surname, password, username, role } = req.body;
     const user = await db.model('user').findOne().where({ username });
-    if (surname && password && role && !user) {
+    if (validateEmail(username) && password && role && !user) {
       await bcrypt.hash(password, saltRounds).then((val) => {
         userModel
           .create({
@@ -17,9 +20,28 @@ class UserController {
             password: val,
             username,
             role,
+            emailToken: crypto.randomBytes(16).toString('hex'),
+            isVerified: false,
           })
-          .then((_res) => {
-            res.json(_res);
+          .then(async (_res) => {
+            const msg = {
+              from: '"UzWorkShop" <noreply@uzworkshop.uz>',
+              to: username,
+              subject: 'Активация аккаунта',
+              html: `
+              <span>Для активации аккаунта перейдите по</span>
+              <a href=${`https://salty-bayou-72693.herokuapp.com/activation/${_res.emailToken}`}>ссылке</a>
+              `,
+            };
+
+            await transporter.sendMail(msg);
+
+            return res.json({
+              name,
+              surname,
+              username,
+              role,
+            });
           })
           .catch((err) => {
             console.log(err);
@@ -27,11 +49,15 @@ class UserController {
       });
     } else {
       if (!role) {
-        res.status(400).send('Выберите роль.');
+        return res.status(400).send('Выберите роль.');
       } else if (!surname || !password) {
-        res.status(400).send('Введите пароль и логин.');
+        return res.status(400).send('Введите пароль и почту.');
       } else if (user) {
-        res.status(400).send('Пользователь с таким логином существует.');
+        return res.status(400).send('Пользователь с такой почтой существует.');
+      } else if (!validateEmail(username)) {
+        return res
+          .status(400)
+          .send('Введите корректный адрес электронной почты.');
       }
     }
   }
@@ -45,13 +71,16 @@ class UserController {
       .where({ username })
       .then((user) => {
         if (user) {
+          if (!user.isVerified) {
+            return res.status(401).send('Для входа нужно активировать почту.');
+          }
           bcrypt.compare(password, user.password, async function (err, result) {
             const orders = await db.model('orders').find();
             const filteredOrders = orders.filter((order) => {
               return String(user._id) === String(order.orderedBy._id);
             });
             if (result && filteredOrders) {
-              res.status(200).send({
+              return res.status(200).send({
                 name: user.name,
                 surname: user.surname,
                 orders: filteredOrders,
@@ -59,11 +88,11 @@ class UserController {
                 _id: user._id,
               });
             } else {
-              res.status(401).send('Неправильно введены данные');
+              return res.status(401).send('Неправильно введены данные');
             }
           });
         } else {
-          res.status(401).send('Неправильно введены данные');
+          return res.status(401).send('Неправильно введены данные');
         }
       });
   }

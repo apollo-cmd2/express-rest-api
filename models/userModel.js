@@ -7,8 +7,6 @@ const UserSchema = mongoose.Schema({
   username: {
     type: String,
     required: true,
-    minLength: 6,
-    maxLength: 15,
     trim: true,
   },
   password: {
@@ -17,6 +15,8 @@ const UserSchema = mongoose.Schema({
   },
   created_At: { type: Date, default: Date.now },
   role: String,
+  isVerified: Boolean,
+  emailToken: String,
 });
 
 module.exports = mongoose.model('user', UserSchema);
