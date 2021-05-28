@@ -30,7 +30,7 @@ class UserController {
               subject: 'Активация аккаунта',
               html: `
               <span>Для активации аккаунта перейдите по</span>
-              <a href=${`https://salty-bayou-72693.herokuapp.com/activation/${_res.emailToken}`}>ссылке</a>
+              <a href=${`https://salty-bayou-72693.herokuapp.com/activation/${_res.emailToken}`}>ссылке.</a>
               `,
             };
 
