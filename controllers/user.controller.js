@@ -111,6 +111,20 @@ class UserController {
       }
     });
   }
+
+  async deleteUser(req, res) {
+    const { userId } = req.params;
+
+    const deleted = await userModel.findByIdAndDelete(userId, {
+      useFindAndModify: true
+    });
+
+    if (deleted) {
+      return res.send('Пользователь успешно удалён.');
+    } else {
+      return res.send('Ошибка при удалнии, повторите попытку.');
+    }
+  }
 }
 
 module.exports = new UserController();

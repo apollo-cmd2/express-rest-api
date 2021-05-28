@@ -3,6 +3,7 @@ const userModel = require('../models/userModel');
 
 const router = new Router();
 
+
 router.get('/activation/:emailToken', async (req, res) => {
   const { emailToken } = req.params;
   const user = await userModel.findOne({ emailToken });
