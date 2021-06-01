@@ -1,6 +1,5 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const userModel = require("../models/userModel");
-const ratingModel = require("../models/rating.model");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const { validateEmail } = require("../utils");
@@ -129,39 +128,71 @@ class UserController {
   }
 
   async rateUser(req, res) {
-    const { userId } = req.params;
-    const { rate, description } = req.body;
+    const { orderId } = req.params;
+    const { rate, description, userId } = req.body;
+    const user = await userModel.findOne({ _id: userId }).exec();
+    const userRole = user.role;
+    const order = await db
+      .model("orders")
+      .findOne({ _id: orderId, status: "done" })
+      .exec();
+    const rating = {
+      rate: Number(rate),
+      description,
+    };
 
+    if (!order || !user) {
+      return res.status(400).send("Не удалось оставить отзыв");
+    }
     if (!rate) {
       return res.status(400).send("Оценка обязательна!!!");
     }
 
-    const rating = await ratingModel.create({
-      user: userId,
-      rate: Number(rate),
-      description,
-    });
-    const ratings = await ratingModel.aggregate([
-      { $match: { user: new mongoose.Types.ObjectId(userId) } },
-      { $group: { _id: null, average: { $avg: "$rate" } } },
-    ]).exec();
-
-    await db.model("user").findOneAndUpdate(
-      {
-        _id: userId,
-      },
-      {
-        rating: ratings.length ? Number(ratings[0].average || 0).toFixed(1) : null,
-      }
-    ).exec();
-
-    if (rating && ratings) {
-      return res.status(200).send(rating);
+    if (userRole === "client" && order) {
+      order.clientComment = rating;
+      await order.save();
+      const workerRating = await db.model("orders").aggregate([
+        {
+          $match: {
+            _id: {
+              $in: user.orders.map((_order) =>
+                mongoose.Types.ObjectId(_order._id)
+              ),
+            },
+          },
+        },
+        {
+          $group: { _id: null, average: { $avg: "$clientComment.rate" } },
+        },
+      ]);
+      user.rating = workerRating.length
+        ? Number(workerRating[0].average || 0).toFixed(1)
+        : null;
+      await user.save();
     } else {
-      return res
-        .status(400)
-        .send("Не удалось оставить отзыв, попробуйте ещё раз.");
+      order.workerComment = rating;
+      await order.save();
+      const clientRating = await db.model("orders").aggregate([
+        {
+          $match: {
+            _id: {
+              $in: user.orders.map((_order) =>
+                mongoose.Types.ObjectId(_order._id)
+              ),
+            },
+          },
+        },
+        {
+          $group: { _id: null, average: { $avg: "$workerComment.rate" } },
+        },
+      ]);
+      user.rating = clientRating.length
+        ? Number(clientRating[0].average || 0).toFixed(1)
+        : null;
+      await user.save();
     }
+
+    return res.status(200).send(rating);
   }
 }
 

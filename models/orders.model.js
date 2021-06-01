@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const OrdersSchema = mongoose.Schema({
   orderedBy: {
@@ -16,7 +16,15 @@ const OrdersSchema = mongoose.Schema({
     type: Date || null,
     default: null,
   },
+  clientComment: {
+    rate: Number,
+    description: String,
+  },
+  workerComment: {
+    rate: Number,
+    description: String,
+  },
   status: String,
 });
 
-module.exports = mongoose.model('orders', OrdersSchema);
+module.exports = mongoose.model("orders", OrdersSchema);

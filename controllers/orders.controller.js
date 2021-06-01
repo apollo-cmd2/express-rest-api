@@ -60,7 +60,7 @@ class OrdersController {
     if (workerId && orderId) {
       ordersModel.findById(orderId, async (err, order) => {
         if (order) {
-          if (order.status === 'created') {
+          if (order.status === 'created' || order.status === 'in progress') {
             db.model('user').findOne({ _id: workerId }, async (err, user) => {
               if (err) {
                 res
