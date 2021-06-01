@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const userModel = require("../models/userModel");
 const ratingModel = require("../models/rating.model");
 const bcrypt = require("bcrypt");
@@ -141,8 +142,9 @@ class UserController {
       description,
     });
     const ratings = await ratingModel.aggregate([
-      { $group: { _id: userId, average: { $avg: "$rate" } } },
-    ]);
+      { $match: { user: new mongoose.Types.ObjectId(userId) } },
+      { $group: { _id: null, average: { $avg: "$rate" } } },
+    ]).exec();
 
     await db.model("user").findOneAndUpdate(
       {
@@ -154,7 +156,7 @@ class UserController {
     ).exec();
 
     if (rating && ratings) {
-      return res.status(200).send("Успех!!!");
+      return res.status(200).send(rating);
     } else {
       return res
         .status(400)
