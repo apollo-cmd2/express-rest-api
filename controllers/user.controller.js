@@ -194,6 +194,48 @@ class UserController {
 
     return res.status(200).send(rating);
   }
+
+  async getUserComments(req, res) {
+    const { userId } = req.params;
+    const user = await userModel.findOne({ _id: userId }).exec();
+    let comments = [];
+
+    if (user) {
+      if (user.role === "worker") {
+        comments = user.orders
+          .filter((order) => {
+            if (order.clientComment) {
+              return true;
+            }
+            return false;
+          })
+          .map((order) => order.clientComment);
+        if (comments.length) {
+          return res.status(200).send(comments);
+        } else {
+          return res.send("У вас нет отзывов.");
+        }
+      }
+      if (user.role === "client") {
+        comments = user.orders
+          .filter((order) => {
+            if (order.workerComment) {
+              return true;
+            }
+            return false;
+          })
+          .map((order) => order.workerComment);
+        if (comments.length) {
+          return res.status(200).send(comments);
+        } else {
+          return res.send("У вас нет отзывов.");
+        }
+      }
+      return res.send(`У вас(${user.role}) не может быть отзывов!!!`);
+    } else {
+      return res.send("Пользователь не найден.");
+    }
+  }
 }
 
 module.exports = new UserController();
