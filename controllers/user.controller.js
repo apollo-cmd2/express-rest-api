@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 const userModel = require("../models/userModel");
 const ratingModel = require("../models/rating.model");
 const bcrypt = require("bcrypt");
@@ -6,25 +5,13 @@ const crypto = require("crypto");
 const { validateEmail } = require("../utils");
 const transporter = require("../mailer");
 const db = require("../db");
-=======
-const userModel = require('../models/userModel');
-const bcrypt = require('bcrypt');
-const crypto = require('crypto');
-const { validateEmail } = require('../utils');
-const transporter = require('../mailer');
-const db = require('../db');
->>>>>>> 345a63e0279d4e1c99adedf6e626236d5e9b355e
 
 const saltRounds = 10;
 
 class UserController {
   async createUser(req, res) {
     const { name, surname, password, username, role } = req.body;
-<<<<<<< HEAD
     const user = await db.model("user").findOne().where({ username });
-=======
-    const user = await db.model('user').findOne().where({ username });
->>>>>>> 345a63e0279d4e1c99adedf6e626236d5e9b355e
     if (validateEmail(username) && password && role && !user) {
       await bcrypt.hash(password, saltRounds).then((val) => {
         userModel
@@ -34,22 +21,14 @@ class UserController {
             password: val,
             username,
             role,
-<<<<<<< HEAD
             emailToken: crypto.randomBytes(16).toString("hex"),
-=======
-            emailToken: crypto.randomBytes(16).toString('hex'),
->>>>>>> 345a63e0279d4e1c99adedf6e626236d5e9b355e
             isVerified: false,
           })
           .then(async (_res) => {
             const msg = {
               from: '"UzWorkShop" <noreply@uzworkshop.uz>',
               to: username,
-<<<<<<< HEAD
               subject: "Активация аккаунта",
-=======
-              subject: 'Активация аккаунта',
->>>>>>> 345a63e0279d4e1c99adedf6e626236d5e9b355e
               html: `
               <span>Для активации аккаунта перейдите по</span>
               <a href=${`https://salty-bayou-72693.herokuapp.com/activation/${_res.emailToken}`}>ссылке.</a>
@@ -71,7 +50,6 @@ class UserController {
       });
     } else {
       if (!role) {
-<<<<<<< HEAD
         return res.status(400).send("Выберите роль.");
       } else if (!surname || !password) {
         return res.status(400).send("Введите пароль и почту.");
@@ -81,17 +59,6 @@ class UserController {
         return res
           .status(400)
           .send("Введите корректный адрес электронной почты.");
-=======
-        return res.status(400).send('Выберите роль.');
-      } else if (!surname || !password) {
-        return res.status(400).send('Введите пароль и почту.');
-      } else if (user) {
-        return res.status(400).send('Пользователь с такой почтой существует.');
-      } else if (!validateEmail(username)) {
-        return res
-          .status(400)
-          .send('Введите корректный адрес электронной почты.');
->>>>>>> 345a63e0279d4e1c99adedf6e626236d5e9b355e
       }
     }
   }
@@ -100,7 +67,6 @@ class UserController {
     const { username, password } = req.body;
 
     await db
-<<<<<<< HEAD
       .model("user")
       .findOne()
       .where({ username })
@@ -111,18 +77,6 @@ class UserController {
           }
           bcrypt.compare(password, user.password, async function (err, result) {
             const orders = await db.model("orders").find();
-=======
-      .model('user')
-      .findOne()
-      .where({ username })
-      .then((user) => {
-        if (user) {
-          if (!user.isVerified) {
-            return res.status(401).send('Для входа нужно активировать почту.');
-          }
-          bcrypt.compare(password, user.password, async function (err, result) {
-            const orders = await db.model('orders').find();
->>>>>>> 345a63e0279d4e1c99adedf6e626236d5e9b355e
             const filteredOrders = orders.filter((order) => {
               return String(user._id) === String(order.orderedBy._id);
             });
@@ -152,11 +106,7 @@ class UserController {
     }
     userModel.find(query, (err, users) => {
       if (err) {
-<<<<<<< HEAD
         res.send("Что то пошло не так, повторите попытку.");
-=======
-        res.send('Что то пошло не так, повторите попытку.');
->>>>>>> 345a63e0279d4e1c99adedf6e626236d5e9b355e
       } else {
         res.send(users);
       }
@@ -167,7 +117,6 @@ class UserController {
     const { userId } = req.params;
 
     const deleted = await userModel.findByIdAndDelete(userId, {
-<<<<<<< HEAD
       useFindAndModify: true,
     });
 
@@ -210,15 +159,6 @@ class UserController {
       return res
         .status(400)
         .send("Не удалось оставить отзыв, попробуйте ещё раз.");
-=======
-      useFindAndModify: true
-    });
-
-    if (deleted) {
-      return res.send('Пользователь успешно удалён.');
-    } else {
-      return res.send('Ошибка при удалнии, повторите попытку.');
->>>>>>> 345a63e0279d4e1c99adedf6e626236d5e9b355e
     }
   }
 }
