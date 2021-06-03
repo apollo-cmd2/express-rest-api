@@ -87,6 +87,7 @@ class UserController {
                 orders: filteredOrders,
                 role: user.role,
                 _id: user._id,
+                createdAt: user.created_At,
               });
             } else {
               return res.status(401).send("Неправильно введены данные");
@@ -123,7 +124,7 @@ class UserController {
     if (deleted) {
       return res.send("Пользователь успешно удалён.");
     } else {
-      return res.send("Ошибка при удалнии, повторите попытку.");
+      return res.send("Ошибка при удалении, повторите попытку.");
     }
   }
 
@@ -234,6 +235,19 @@ class UserController {
       return res.send(`У вас(${user.role}) не может быть отзывов!!!`);
     } else {
       return res.send("Пользователь не найден.");
+    }
+  }
+
+  async getAllComments(_, res) {
+    const comments = await db
+      .model("orders")
+      .find({ clientComment: { $exists: true } }, "clientComment")
+      .exec();
+
+    if (comments.length) {
+      return res.status(200).send(comments);
+    } else {
+      return res.send("Отзывов нет");
     }
   }
 }

@@ -1,22 +1,22 @@
-const db = require('../db');
-const ordersModel = require('../models/orders.model');
+const db = require("../db");
+const ordersModel = require("../models/orders.model");
 
 class OrdersController {
   async createOrder(req, res) {
     const { userId } = req.params;
     const { description } = req.body;
 
-    const user = await db.model('user').findOne({ _id: userId });
+    const user = await db.model("user").findOne({ _id: userId });
 
     const order = {
       orderedBy: {
-        name: user.name + ' ' + user.surname,
+        name: user.name + " " + user.surname,
         _id: userId,
       },
       description,
       takenBy: null,
       takenAt: null,
-      status: 'created',
+      status: "created",
     };
 
     new ordersModel(order).save().then(async (val) => {
@@ -49,7 +49,7 @@ class OrdersController {
       if (order) {
         res.send(order);
       } else {
-        res.send('Заявка не найдена.');
+        res.send("Заявка не найдена.");
       }
     });
   }
@@ -60,19 +60,28 @@ class OrdersController {
     if (workerId && orderId) {
       ordersModel.findById(orderId, async (err, order) => {
         if (order) {
-          if (order.status === 'created' || order.status === 'in progress') {
-            db.model('user').findOne({ _id: workerId }, async (err, user) => {
+          if (order.status === "created" || order.status === "in progress") {
+            db.model("user").findOne({ _id: workerId }, async (err, user) => {
               if (err) {
-                res
+                return res
                   .status(403)
-                  .send('Что то пошло не так, попробуйте ещё раз.');
+                  .send("Что то пошло не так, попробуйте ещё раз.");
               }
+              const client = await db
+                .model("user")
+                .findOne({ _id: order.orderedBy._id })
+                .exec();
+                const clientOrderIndex = client.orders.findIndex(
+                  (_order) => _order._id === order._id
+                );
               order.takenBy = {
-                name: user.name + ' ' + user.surname,
+                name: user.name + " " + user.surname,
                 _id: user._id,
               };
               order.status = status;
               order.takenAt = new Date();
+              client.orders[clientOrderIndex] = order;
+              await client.save();
               const orderExists = user.orders.find(
                 (_order) => _order._id === order._id
               );
@@ -80,24 +89,24 @@ class OrdersController {
                 user.orders.push(order);
                 await order.save();
                 await user.save();
-                res.send('Успех!!!');
+                return res.send("Успех!!!");
               } else {
-                res.send(
-                  'Вы уже обработали эту заявку или она в процессе обработки.'
+                return res.send(
+                  "Вы уже обработали эту заявку или она в процессе обработки."
                 );
               }
             });
           } else {
-            res.send(
-              'Эта заявка уже в процессе выполнения или уже обработана.'
+            return res.send(
+              "Эта заявка уже в процессе выполнения или уже обработана."
             );
           }
         } else {
-          res.send('Не удалось найти заявку.');
+          return res.send("Не удалось найти заявку.");
         }
       });
     } else {
-      res.status(403).send('Что то пошло не так, попробуйте ещё раз.');
+      return res.status(403).send("Что то пошло не так, попробуйте ещё раз.");
     }
   }
 }

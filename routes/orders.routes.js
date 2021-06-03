@@ -5,7 +5,7 @@ const router = new Router();
 
 router.post('/order/:userId', ordersController.createOrder);
 router.get('/orders', ordersController.getOrders);
-router.patch('/order/:workerId', ordersController.updateOrder);
+router.put('/order/:workerId', ordersController.updateOrder);
 router.get('/order/:orderId', ordersController.getOrder);
 
 module.exports = router;
