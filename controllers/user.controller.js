@@ -10,14 +10,14 @@ const saltRounds = 10;
 
 class UserController {
   async createUser(req, res) {
-    const { name, surname, password, username, role } = req.body;
+    const { name, phone, password, username, role } = req.body;
     const user = await db.model("user").findOne().where({ username });
     if (validateEmail(username) && password && role && !user) {
       await bcrypt.hash(password, saltRounds).then((val) => {
         userModel
           .create({
             name,
-            surname,
+            phone,
             password: val,
             username,
             role,
@@ -39,7 +39,7 @@ class UserController {
 
             return res.json({
               name,
-              surname,
+              phone,
               username,
               role,
             });
@@ -51,7 +51,7 @@ class UserController {
     } else {
       if (!role) {
         return res.status(400).send("Выберите роль.");
-      } else if (!surname || !password) {
+      } else if (!username || !password) {
         return res.status(400).send("Введите пароль и почту.");
       } else if (user) {
         return res.status(400).send("Пользователь с такой почтой существует.");
@@ -83,7 +83,7 @@ class UserController {
             if (result && filteredOrders) {
               return res.status(200).send({
                 name: user.name,
-                surname: user.surname,
+                phone: user.phone,
                 orders: filteredOrders,
                 role: user.role,
                 _id: user._id,
@@ -241,8 +241,9 @@ class UserController {
   async getAllComments(_, res) {
     const comments = await db
       .model("orders")
-      .find({ clientComment: { $exists: true } }, "clientComment")
+      .find({ clientComment: { $exists: true } })
       .exec();
+      console.log(comments);
 
     if (comments.length) {
       return res.status(200).send(comments);
