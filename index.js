@@ -14,6 +14,7 @@ app.use("/api", [
   require("./routes/orders.routes"),
   require("./routes/providers.routes"),
   require("./routes/details.routes"),
+  require("./routes/services.routes"),
 ]);
 app.use(activateRoutes);
 
