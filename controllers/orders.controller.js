@@ -10,7 +10,7 @@ class OrdersController {
 
     const order = {
       orderedBy: {
-        name: user.name + " " + user.surname,
+        name: user.name,
         _id: userId,
       },
       description,
@@ -71,11 +71,11 @@ class OrdersController {
                 .model("user")
                 .findOne({ _id: order.orderedBy._id })
                 .exec();
-                const clientOrderIndex = client.orders.findIndex(
-                  (_order) => _order._id === order._id
-                );
+              const clientOrderIndex = client.orders.findIndex(
+                (_order) => _order._id === order._id
+              );
               order.takenBy = {
-                name: user.name + " " + user.surname,
+                name: user.name,
                 _id: user._id,
               };
               order.status = status;
@@ -107,6 +107,48 @@ class OrdersController {
       });
     } else {
       return res.status(403).send("Что то пошло не так, попробуйте ещё раз.");
+    }
+  }
+
+  async deleteOrder(req, res) {
+    try {
+      const { orderId } = req.params;
+
+      await ordersModel
+        .findByIdAndRemove(orderId, async (err, order) => {
+          console.log(err, order, orderId);
+          if (order && !err) {
+            if (order.takenBy) {
+              const user = await db
+                .model("user")
+                .findOne({ _id: order.takenBy._id });
+              if (user) {
+                user.orders = user.orders.filter((order) => order._id !== orderId);
+                await user.save();
+              }
+            }
+
+            if (order.orderedBy) {
+              const worker = await db
+                .model("user")
+                .findOne({ _id: order.orderedBy._id });
+              if (worker) {
+                worker.orders = worker.orders.filter(
+                  (order) => order._id !== orderId
+                );
+                await worker.save();
+              }
+            }
+            return res.status(200).send({ msg: "Заявка удалена." });
+          } else {
+            return res
+              .status(400)
+              .send({ msg: "Что-то пошло не так, повторите попытку." });
+          }
+        })
+        .exec();
+    } catch (err) {
+      return res.status(500).send({ msg: err.message });
     }
   }
 }
